@@ -1,0 +1,360 @@
+<title>Nook Privacy Policy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --paper:#faf9fc;
+    --surface:#ffffff;
+    --ink:#201b2e;
+    --ink-dim:#635c72;
+    --line:#e4e0ee;
+    --accent-1:#5b7fff;
+    --accent-2:#9a5cf5;
+    --accent-3:#ef4fb8;
+    --code-bg:#f1eefa;
+    --code-ink:#5a3b8f;
+    --shadow: 0 1px 2px rgba(32,27,46,.04), 0 8px 24px rgba(32,27,46,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#15121e;
+      --surface:#1c1829;
+      --ink:#f1eef7;
+      --ink-dim:#a89fbd;
+      --line:#2f2942;
+      --accent-1:#7d9bff;
+      --accent-2:#b586ff;
+      --accent-3:#ff7fd0;
+      --code-bg:#241f38;
+      --code-ink:#c9a8ff;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#15121e;
+    --surface:#1c1829;
+    --ink:#f1eef7;
+    --ink-dim:#a89fbd;
+    --line:#2f2942;
+    --accent-1:#7d9bff;
+    --accent-2:#b586ff;
+    --accent-3:#ff7fd0;
+    --code-bg:#241f38;
+    --code-ink:#c9a8ff;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  code, .k{
+    font-family:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+
+  .wrap{
+    max-width:720px;
+    margin:0 auto;
+    padding:56px 24px 96px;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:40px;
+    opacity:0;
+    animation:rise .5s ease forwards;
+  }
+  .mark{
+    width:34px; height:34px;
+    border-radius:11px;
+    background:linear-gradient(135deg,var(--accent-1),var(--accent-2) 55%,var(--accent-3));
+    flex-shrink:0;
+  }
+  .brand{
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:600;
+    font-size:19px;
+    letter-spacing:.2px;
+  }
+  .brand-sub{
+    font-size:13px;
+    color:var(--ink-dim);
+    margin-top:1px;
+  }
+
+  h1{
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:500;
+    font-size:clamp(34px,5vw,46px);
+    line-height:1.08;
+    letter-spacing:-.01em;
+    margin:0 0 10px;
+    text-wrap:balance;
+    opacity:0;
+    animation:rise .6s ease forwards;
+    animation-delay:.08s;
+  }
+  .updated{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12.5px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-dim);
+    margin:0 0 36px;
+    opacity:0;
+    animation:rise .6s ease forwards;
+    animation-delay:.14s;
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    header, h1, .updated{ animation:none; opacity:1; }
+  }
+
+  /* ---------- tl;dr tiles ---------- */
+  .tldr{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:48px;
+    box-shadow:var(--shadow);
+  }
+  .tile{
+    background:var(--surface);
+    padding:20px 18px;
+  }
+  .tile .num{
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:500;
+    font-size:26px;
+    line-height:1.1;
+  }
+  .tile .num span{ font-size:15px; font-weight:400; color:var(--ink-dim); }
+  .tile .lbl{
+    font-size:12.5px;
+    color:var(--ink-dim);
+    margin-top:4px;
+  }
+  .tile:nth-child(1) .num{ color:var(--accent-1); }
+  .tile:nth-child(2) .num{ color:var(--accent-2); }
+  .tile:nth-child(3) .num{ color:var(--accent-3); }
+
+  /* ---------- sections ---------- */
+  section{
+    padding:32px 0;
+    border-top:1px solid var(--line);
+  }
+  section:first-of-type{ border-top:none; padding-top:0; }
+
+  h2{
+    font-family:"Fraunces", Georgia, serif;
+    font-weight:500;
+    font-size:22px;
+    margin:0 0 14px;
+    text-wrap:balance;
+  }
+  p{ margin:0 0 14px; color:var(--ink); max-width:64ch; }
+  p:last-child{ margin-bottom:0; }
+  .dim{ color:var(--ink-dim); }
+
+  ul.plain{ margin:0 0 14px; padding-left:20px; }
+  ul.plain li{ margin-bottom:6px; }
+
+  /* ---------- data table ---------- */
+  .data-table{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    margin-bottom:8px;
+  }
+  .row{
+    display:grid;
+    grid-template-columns:150px 1fr;
+    gap:16px;
+    padding:14px 16px;
+    border-top:1px solid var(--line);
+  }
+  .row:first-child{ border-top:none; }
+  .row .key{ padding-top:2px; }
+  .row .desc{ color:var(--ink-dim); font-size:14.5px; }
+  .row .desc b{ color:var(--ink); font-weight:600; }
+  code.chip{
+    display:inline-block;
+    background:var(--code-bg);
+    color:var(--code-ink);
+    font-size:12.5px;
+    padding:3px 7px;
+    border-radius:6px;
+  }
+  .scope{
+    display:inline-block;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--ink-dim);
+    margin-top:6px;
+  }
+
+  @media (max-width:560px){
+    .tldr{ grid-template-columns:1fr; }
+    .row{ grid-template-columns:1fr; gap:6px; }
+  }
+
+  footer{
+    margin-top:56px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+    font-size:13px;
+    color:var(--ink-dim);
+  }
+  footer a{ color:var(--accent-2); text-decoration:none; border-bottom:1px solid currentColor; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="mark" aria-hidden="true"></div>
+    <div>
+      <div class="brand">Nook</div>
+      <div class="brand-sub">Chrome new-tab extension</div>
+    </div>
+  </header>
+
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated · September 4, 2026</p>
+
+  <div class="tldr">
+    <div class="tile">
+      <div class="num">0</div>
+      <div class="lbl">Servers Nook operates or sends your data to</div>
+    </div>
+    <div class="tile">
+      <div class="num">100<span>%</span></div>
+      <div class="lbl">Of your data stays in Chrome's own storage, on your device</div>
+    </div>
+    <div class="tile">
+      <div class="num">Never</div>
+      <div class="lbl">Sold, shared, or used for anything but Nook itself</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>What Nook is</h2>
+    <p>Nook replaces your new tab page with a clock, web search, quick links, an animated or photo background, and a personal Inbox for saving pages or text you select while browsing. This policy explains exactly what it stores, why, and where it goes — which, for almost everything, is nowhere but your own device.</p>
+  </section>
+
+  <section>
+    <h2>What Nook stores</h2>
+    <p>Everything below is written using Chrome's built‑in <code class="chip">chrome.storage</code> API. Nothing here is a server Nook operates — it's storage Chrome itself manages on your behalf.</p>
+    <div class="data-table">
+      <div class="row">
+        <div class="key"><code class="chip">links</code><br><span class="scope">sync</span></div>
+        <div class="desc">The name and URL of each quick-link tile on your dashboard.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">searchEngine</code><br><code class="chip">timeFormat</code><br><code class="chip">theme</code><br><code class="chip">palette</code><br><code class="chip">bgMode</code><br><code class="chip">photoIndex</code><br><span class="scope">sync</span></div>
+        <div class="desc">Display preferences — which search engine, clock format, light/dark theme, color palette, and background you've chosen.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">inboxItems</code><br><span class="scope">local</span></div>
+        <div class="desc">Entries you explicitly save to your Inbox: a page's <b>title, URL, and favicon</b>, or the exact <b>text you selected</b>, plus the time you saved it. Nothing is added here unless you click "Save page," "Save selection," or the matching right‑click menu item.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">customPhotoData</code><br><span class="scope">local</span></div>
+        <div class="desc">An optional background photo you upload from your own device, resized and compressed before it's stored.</div>
+      </div>
+    </div>
+    <p class="dim" style="font-size:13.5px; margin-top:14px;"><b style="color:var(--ink)">sync</b> is synced across your signed‑in Chrome browsers by Google's own Chrome Sync, under your Google account. <b style="color:var(--ink)">local</b> stays on this device only. Nook has no server in either path.</p>
+  </section>
+
+  <section>
+    <h2>How this data reaches Nook</h2>
+    <p>Only through something you did on purpose:</p>
+    <ul class="plain">
+      <li>Clicking <b>Save current page</b> or <b>Save selected text</b> in the popup</li>
+      <li>Using the right‑click menu items <b>"Save page to Nook"</b> or <b>"Save selection to Nook"</b></li>
+      <li>Adding a quick link, changing a setting, or uploading a background photo</li>
+    </ul>
+    <p>Nook does not watch your browsing in the background, log the pages you visit, track clicks or scrolling, or record keystrokes. It only reads the active tab's title, URL, favicon, or current text selection at the exact moment you trigger one of the actions above.</p>
+  </section>
+
+  <section>
+    <h2>What Nook never does</h2>
+    <ul class="plain">
+      <li>Never sells or transfers your data to third parties</li>
+      <li>Never uses your data for anything outside Nook's own features</li>
+      <li>Never uses your data to assess creditworthiness or for lending</li>
+      <li>Never collects your name, email, health, financial, authentication, or location data</li>
+      <li>Never reads personal communications (email, chat, messages)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>The two outbound requests Nook makes</h2>
+    <p><b>Favicon icons</b> — to show the little site icon next to a quick link or Inbox item, your browser requests it directly from Google's public favicon service (<code class="chip">google.com/s2/favicons</code>), the same way any website's favicon loads. Nook doesn't see or log this request.</p>
+    <p><b>Your search</b> — typing in Nook's search bar sends your query straight to whichever engine you picked (Google, Bing, or DuckDuckGo), exactly as if you'd typed it into that site directly. Nook itself never receives or stores your search terms.</p>
+  </section>
+
+  <section>
+    <h2>Your controls</h2>
+    <p>Every Inbox item has a remove button. Quick links and the custom background photo can be deleted from Settings at any time. Uninstalling Nook removes all of its locally stored data immediately; synced data clears from your Google account's extension storage as Chrome would for any removed extension.</p>
+  </section>
+
+  <section>
+    <h2>Children's privacy</h2>
+    <p>Nook is not directed at children and does not knowingly collect data from anyone under 13.</p>
+  </section>
+
+  <section>
+    <h2>Permissions Nook requests</h2>
+    <div class="data-table">
+      <div class="row">
+        <div class="key"><code class="chip">storage</code></div>
+        <div class="desc">Read and write the data described above via <code>chrome.storage</code>.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">unlimitedStorage</code></div>
+        <div class="desc">Lets an uploaded background photo exceed Chrome's default 10MB local storage cap.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">contextMenus</code></div>
+        <div class="desc">Adds the "Save page / selection to Nook" right‑click menu items.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">activeTab</code></div>
+        <div class="desc">Reads the active tab's title, URL, and favicon only when you click Save.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">scripting</code></div>
+        <div class="desc">Reads your current text selection only when you click "Save selected text" in the popup.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Changes to this policy</h2>
+    <p>If this policy changes, the date at the top of this page will change with it. Meaningful changes will also be reflected in the extension's Chrome Web Store listing.</p>
+  </section>
+
+  <footer>
+    Questions about this policy? Contact <a href="mailto:your-email@example.com">your-email@example.com</a>.
+  </footer>
+
+</div>

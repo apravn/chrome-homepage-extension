@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>New Tab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="bgPhoto" class="bg-photo" aria-hidden="true"></div>
+  <div id="bgScrim" class="bg-scrim" aria-hidden="true"></div>
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Open settings">⚙</button>
+  <button id="themeBtn" class="icon-btn theme-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+  <button id="inboxBtn" class="icon-btn inbox-btn" title="Inbox" aria-label="Open inbox">
+    📥<span id="inboxBadge" class="icon-badge" hidden></span>
+  </button>
+
+  <main class="page">
+    <div class="clock-block">
+      <div id="clock" class="clock">--:--</div>
+      <div id="greeting" class="greeting">Hello</div>
+    </div>
+
+    <form id="searchForm" class="search-form" autocomplete="off">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" type="text" placeholder="Search the web…" autofocus />
+    </form>
+
+    <div id="quickLinks" class="quick-links"></div>
+  </main>
+
+  <aside id="settingsPanel" class="settings-panel" hidden>
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button id="closeSettings" class="icon-btn" aria-label="Close settings">✕</button>
+    </div>
+
+    <section class="settings-section">
+      <h3>Quick links</h3>
+      <form id="addLinkForm" class="add-link-form">
+        <input id="linkName" type="text" placeholder="Name" required />
+        <input id="linkUrl" type="text" placeholder="URL (e.g. example.com)" required />
+        <button type="submit">Add</button>
+      </form>
+      <ul id="linkList" class="link-list"></ul>
+    </section>
+
+    <section class="settings-section">
+      <h3>Search engine</h3>
+      <select id="searchEngine">
+        <option value="google">Google</option>
+        <option value="bing">Bing</option>
+        <option value="duckduckgo">DuckDuckGo</option>
+      </select>
+    </section>
+
+    <section class="settings-section">
+      <h3>Time format</h3>
+      <div id="timeFormat" class="segmented">
+        <button type="button" data-format="12">12h</button>
+        <button type="button" data-format="24">24h</button>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h3>Background</h3>
+      <div id="bgMode" class="segmented">
+        <button type="button" data-mode="aurora">Aurora</button>
+        <button type="button" data-mode="photo">Photo</button>
+      </div>
+    </section>
+
+    <section id="paletteSection" class="settings-section">
+      <h3>Color palette</h3>
+      <div id="paletteRow" class="palette-row"></div>
+    </section>
+
+    <section id="photoSection" class="settings-section" hidden>
+      <h3>Photo</h3>
+      <div id="photoThumbs" class="photo-thumbs"></div>
+      <input type="file" id="photoUpload" accept="image/*" hidden />
+      <button type="button" id="uploadPhotoBtn" class="shuffle-btn">⬆️ Upload your own</button>
+      <button type="button" id="shufflePhoto" class="shuffle-btn" style="margin-top: 8px;">🔀 Shuffle now</button>
+    </section>
+  </aside>
+  <aside id="inboxPanel" class="settings-panel" hidden>
+    <div class="settings-header">
+      <h2>Inbox</h2>
+      <button id="closeInbox" class="icon-btn" aria-label="Close inbox">✕</button>
+    </div>
+
+    <div class="inbox-search-row">
+      <input id="inboxSearch" type="text" placeholder="Search saved items…" autocomplete="off" />
+    </div>
+
+    <div id="inboxFilter" class="segmented inbox-filter">
+      <button type="button" data-filter="all" class="active">All</button>
+      <button type="button" data-filter="page">Pages</button>
+      <button type="button" data-filter="selection">Selections</button>
+    </div>
+
+    <ul id="inboxList" class="inbox-list"></ul>
+  </aside>
+
+  <div id="overlay" class="overlay" hidden></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
