@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Nook",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A calm, personal corner for your new tab — clock, search, quick links, a living animated backdrop, and a save-anything inbox.",
   "chrome_url_overrides": { "newtab": "newtab.html" },
   "permissions": ["storage", "unlimitedStorage", "contextMenus", "activeTab", "scripting"],
