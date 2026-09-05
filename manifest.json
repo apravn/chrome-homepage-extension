@@ -1,12 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Nook",
-  "version": "1.2.0",
-  "description": "A calm, personal corner for your new tab — clock, search, quick links, a living animated backdrop, and a save-anything inbox.",
+  "version": "2.0.0",
+  "description": "A calm, personal corner for your new tab — clock, search, quick links, a living animated backdrop, and visual boards for anything you save.",
   "chrome_url_overrides": { "newtab": "newtab.html" },
-  "permissions": ["storage", "unlimitedStorage", "contextMenus", "activeTab", "scripting"],
+  "permissions": ["storage", "unlimitedStorage", "contextMenus", "activeTab", "scripting", "bookmarks"],
   "background": {
     "service_worker": "background.js"
+  },
+  "commands": {
+    "quick-save": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Save the current page to Nook"
+    }
   },
   "action": {
     "default_popup": "popup.html",

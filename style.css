@@ -202,13 +202,12 @@ body.photo-mode {
 }
 
 .page {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
-  gap: 32px;
+  justify-content: flex-start;
+  padding: 40px 24px 20px;
+  gap: 28px;
 }
 
 .clock-block {
@@ -318,7 +317,7 @@ body.photo-mode {
 
 #settingsBtn { right: 18px; }
 .theme-btn { right: 68px; }
-.inbox-btn { right: 118px; }
+.import-btn { right: 118px; }
 
 .icon-badge {
   position: absolute;
@@ -534,61 +533,185 @@ body.photo-mode {
 }
 
 .segmented button.active {
-  background: var(--bg-2);
+  /* A solid brand accent rather than var(--bg-2) — that token is a soft
+     pastel meant for the aurora gradient/blob backgrounds (as pale as
+     #f3e8ff in the light theme), too low-contrast for white text here. */
+  background: #6a5cd1;
   color: #fff;
   opacity: 1;
 }
 
-/* ---------- Inbox ---------- */
-.inbox-search-row { margin-bottom: 12px; }
-
-.inbox-search-row input {
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--card-border);
-  background: var(--input-bg);
-  color: inherit;
-  font-size: 13px;
-  outline: none;
-}
-
-.inbox-filter { margin-bottom: 16px; }
-
-.inbox-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ---------- Boards ---------- */
+.boards-section {
+  width: min(1100px, 94vw);
+  margin: 0 auto;
+  padding-bottom: 40px;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.board-tabs-row {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.inbox-item {
+.board-tabs {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  background: var(--input-bg);
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
-.inbox-favicon {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+.board-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 8px 10px 8px 14px;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.board-tab.active {
+  /* A solid brand accent rather than var(--bg-2) — that token is a soft
+     pastel meant for the aurora gradient/blob backgrounds, and is too pale
+     in the light theme to hold white text legibly on a primary nav element. */
+  background: #6a5cd1;
+  border-color: transparent;
+  color: #fff;
+}
+
+.board-tab-name { font-size: 13px; font-weight: 600; }
+
+.board-tab-rename-input {
+  font-size: 13px;
+  font-weight: 600;
+  width: 110px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  color: inherit;
+  outline: none;
+}
+
+.board-tab-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.board-tab:hover .board-tab-actions,
+.board-tab:focus-within .board-tab-actions {
+  opacity: 1;
+}
+
+.board-tab-rename,
+.board-tab-delete {
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.85;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px;
+  line-height: 1;
+}
+.board-tab-rename:hover,
+.board-tab-delete:hover { opacity: 1; }
+
+.board-tab-add {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  color: inherit;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.board-tab-add:hover { background: var(--card-bg-hover); }
+
+.board-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#boardSearch {
+  flex: 1;
+  min-width: 180px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: inherit;
+  font-size: 13px;
+  outline: none;
+  backdrop-filter: blur(10px);
+}
+#boardSearch::placeholder { color: var(--text-dim); }
+
+.board-filter {
+  flex-shrink: 0;
+}
+/* .segmented's buttons default to flex:1 with zero horizontal padding —
+   fine for the 2-button toggles in the fixed-width settings sidebar, but
+   this control has 4 longer labels sharing a shrinking flex row with the
+   search input, so size each to its own content instead of stretching. */
+.board-filter button {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.board-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.board-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.board-card:hover { background: var(--card-bg-hover); }
+
+.board-card-body { display: flex; gap: 10px; cursor: pointer; }
+
+.board-card-favicon {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   margin-top: 2px;
   flex-shrink: 0;
 }
 
-.inbox-body {
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
-}
+.board-card-text { min-width: 0; }
 
-.inbox-title {
-  font-size: 13px;
+.board-card-title {
+  font-size: 13.5px;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -597,7 +720,7 @@ body.photo-mode {
   -webkit-box-orient: vertical;
 }
 
-.inbox-snippet {
+.board-card-snippet {
   font-size: 12px;
   color: var(--text-dim);
   margin-top: 2px;
@@ -608,30 +731,115 @@ body.photo-mode {
   -webkit-box-orient: vertical;
 }
 
-.inbox-meta {
+.board-card-meta {
   font-size: 11px;
   color: var(--text-dim);
   opacity: 0.8;
   margin-top: 4px;
 }
 
-.inbox-delete {
+.board-card-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.board-card-move {
+  flex: 1;
+  min-width: 0;
+  font-size: 11.5px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  color: inherit;
+}
+
+.board-card-delete {
   border: none;
   background: transparent;
   color: inherit;
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: pointer;
   font-size: 13px;
   flex-shrink: 0;
   padding: 2px 4px;
 }
-.inbox-delete:hover { opacity: 1; }
+.board-card-delete:hover { opacity: 1; }
 
-.inbox-empty {
-  list-style: none;
+.board-empty {
+  grid-column: 1 / -1;
   text-align: center;
   color: var(--text-dim);
   font-size: 13px;
   line-height: 1.5;
-  padding: 28px 8px;
+  padding: 40px 16px;
 }
+
+.card-ghost { opacity: 0.4; }
+
+/* ---------- Settings hints & bookmarks import ---------- */
+.settings-hint {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+.settings-hint code {
+  font-size: 11px;
+  background: var(--input-bg);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.settings-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+#quickSaveBoard,
+#importTargetBoard {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg);
+  color: inherit;
+  font-size: 13px;
+}
+
+.bookmark-tree {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--input-bg);
+}
+
+.bookmark-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.bookmark-children {
+  margin-left: 20px;
+  padding-left: 8px;
+  border-left: 1px solid var(--card-border);
+}
+
+.import-target-row { margin-bottom: 12px; }
+
+.import-status {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: #7fe0a8;
+}
+.import-status.error { color: #ff8a8a; }

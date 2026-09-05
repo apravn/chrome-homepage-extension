@@ -12,8 +12,8 @@
 
   <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Open settings">⚙</button>
   <button id="themeBtn" class="icon-btn theme-btn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
-  <button id="inboxBtn" class="icon-btn inbox-btn" title="Inbox" aria-label="Open inbox">
-    📥<span id="inboxBadge" class="icon-badge" hidden></span>
+  <button id="importBtn" class="icon-btn import-btn" title="Import bookmarks" aria-label="Import bookmarks">
+    📑<span id="cardCountBadge" class="icon-badge" hidden></span>
   </button>
 
   <main class="page">
@@ -29,6 +29,25 @@
 
     <div id="quickLinks" class="quick-links"></div>
   </main>
+
+  <section id="boardsSection" class="boards-section">
+    <div class="board-tabs-row">
+      <div id="boardTabs" class="board-tabs"></div>
+      <button type="button" id="addBoardBtn" class="board-tab-add" title="New board" aria-label="New board">＋</button>
+    </div>
+
+    <div class="board-toolbar">
+      <input id="boardSearch" type="text" placeholder="Search this board…" autocomplete="off" />
+      <div id="boardFilter" class="segmented board-filter">
+        <button type="button" data-filter="all" class="active">All</button>
+        <button type="button" data-filter="page">Pages</button>
+        <button type="button" data-filter="selection">Selections</button>
+        <button type="button" data-filter="bookmark">Bookmarks</button>
+      </div>
+    </div>
+
+    <div id="boardCards" class="board-card-grid"></div>
+  </section>
 
   <aside id="settingsPanel" class="settings-panel" hidden>
     <div class="settings-header">
@@ -83,28 +102,36 @@
       <button type="button" id="uploadPhotoBtn" class="shuffle-btn">⬆️ Upload your own</button>
       <button type="button" id="shufflePhoto" class="shuffle-btn" style="margin-top: 8px;">🔀 Shuffle now</button>
     </section>
+
+    <section class="settings-section">
+      <h3>Quick Save</h3>
+      <p class="settings-hint">Ctrl+Shift+S (⌘+Shift+S on Mac) saves the current page straight to a board. Change the shortcut at <code>chrome://extensions/shortcuts</code>.</p>
+      <label class="settings-label" for="quickSaveBoard">Adds cards to</label>
+      <select id="quickSaveBoard"></select>
+    </section>
   </aside>
-  <aside id="inboxPanel" class="settings-panel" hidden>
+  <aside id="importPanel" class="settings-panel" hidden>
     <div class="settings-header">
-      <h2>Inbox</h2>
-      <button id="closeInbox" class="icon-btn" aria-label="Close inbox">✕</button>
+      <h2>Import bookmarks</h2>
+      <button id="closeImport" class="icon-btn" aria-label="Close import">✕</button>
     </div>
 
-    <div class="inbox-search-row">
-      <input id="inboxSearch" type="text" placeholder="Search saved items…" autocomplete="off" />
+    <p class="settings-hint">Copy your existing Chrome bookmarks onto a board. Nothing about your actual bookmarks is changed or removed.</p>
+
+    <div id="bookmarkTree" class="bookmark-tree"></div>
+
+    <div class="import-target-row">
+      <label class="settings-label" for="importTargetBoard">Import into</label>
+      <select id="importTargetBoard"></select>
     </div>
 
-    <div id="inboxFilter" class="segmented inbox-filter">
-      <button type="button" data-filter="all" class="active">All</button>
-      <button type="button" data-filter="page">Pages</button>
-      <button type="button" data-filter="selection">Selections</button>
-    </div>
-
-    <ul id="inboxList" class="inbox-list"></ul>
+    <button type="button" id="runImportBtn" class="shuffle-btn">Import selected</button>
+    <div id="importStatus" class="import-status" hidden></div>
   </aside>
 
   <div id="overlay" class="overlay" hidden></div>
 
+  <script src="lib/sortable.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

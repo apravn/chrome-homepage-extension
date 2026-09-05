@@ -441,10 +441,16 @@ el("settingsBtn").addEventListener("click", openSettings);
 el("closeSettings").addEventListener("click", closeSettings);
 el("overlay").addEventListener("click", () => {
   closeSettings();
-  closeInbox();
+  closeImportPanel();
 });
 
-// ---------- Inbox ----------
+// ---------- Boards ----------
+const MIGRATION_FLAG_KEY = "nookMigrationV2";
+
+function makeId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function escapeHtml(str) {
   const d = document.createElement("div");
   d.textContent = str || "";
@@ -469,108 +475,458 @@ function domainOf(url) {
   }
 }
 
-async function getInboxItems() {
+// A context-menu save or the Quick Save shortcut can fire from background.js
+// before this page has ever run post-update, so background.js carries its
+// own copy of this same one-time migration, guarded by the same flag.
+async function ensureMigrated() {
+  const { [MIGRATION_FLAG_KEY]: migrated } = await getLocal(MIGRATION_FLAG_KEY);
+  if (migrated) return;
+
   const { inboxItems } = await getLocal("inboxItems");
-  return inboxItems || [];
+  const oldItems = inboxItems || [];
+
+  const defaultBoard = {
+    id: makeId(),
+    name: "Inbox",
+    order: 0,
+    createdAt: Date.now(),
+    isDefault: true,
+  };
+
+  const cards = oldItems.map((item, i) => ({
+    id: item.id || makeId(),
+    boardId: defaultBoard.id,
+    order: i, // old array was newest-first (unshift), so index doubles as order
+    type: item.type,
+    title: item.title,
+    url: item.url,
+    selectionText: item.selectionText ?? null,
+    favicon: item.favicon || "",
+    tags: item.tags || [],
+    savedAt: item.savedAt,
+    source: "migrated",
+  }));
+
+  // Leave the old inboxItems key untouched — cheap insurance, and
+  // unlimitedStorage makes the storage cost of keeping it irrelevant.
+  await setLocal({
+    nookBoards: [defaultBoard],
+    nookCards: cards,
+    [MIGRATION_FLAG_KEY]: true,
+  });
 }
 
-let inboxFilterType = "all";
+async function getBoards() {
+  await ensureMigrated();
+  const { nookBoards } = await getLocal("nookBoards");
+  return (nookBoards || []).slice().sort((a, b) => a.order - b.order);
+}
 
-async function renderInbox() {
-  const items = await getInboxItems();
-  const query = el("inboxSearch").value.trim().toLowerCase();
+async function getCards() {
+  await ensureMigrated();
+  const { nookCards } = await getLocal("nookCards");
+  return nookCards || [];
+}
 
-  const filtered = items.filter((item) => {
-    if (inboxFilterType !== "all" && item.type !== inboxFilterType) return false;
+async function setBoards(boards) {
+  await setLocal({ nookBoards: boards });
+}
+
+async function setCards(cards) {
+  await setLocal({ nookCards: cards });
+}
+
+let activeBoardId = null;
+let boardFilterType = "all";
+let boardTabsSortable = null;
+let boardCardsSortable = null;
+
+async function renderBoardTabs() {
+  const boards = await getBoards();
+
+  if (!activeBoardId || !boards.some((b) => b.id === activeBoardId)) {
+    const fallback = boards.find((b) => b.isDefault) || boards[0];
+    activeBoardId = fallback && fallback.id;
+  }
+
+  const row = el("boardTabs");
+  row.innerHTML = "";
+
+  boards.forEach((board) => {
+    const tab = document.createElement("div");
+    tab.className = "board-tab" + (board.id === activeBoardId ? " active" : "");
+    tab.dataset.boardId = board.id;
+    tab.innerHTML = `
+      <span class="board-tab-name">${escapeHtml(board.name)}</span>
+      <span class="board-tab-actions">
+        <button type="button" class="board-tab-rename" title="Rename board" aria-label="Rename board">✏️</button>
+        <button type="button" class="board-tab-delete" title="Delete board" aria-label="Delete board">🗑️</button>
+      </span>
+    `;
+    tab.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      activeBoardId = board.id;
+      renderBoardTabs();
+      renderActiveBoard();
+    });
+    tab.querySelector(".board-tab-rename").addEventListener("click", (e) => {
+      e.stopPropagation();
+      startRenameBoard(tab, board);
+    });
+    tab.querySelector(".board-tab-delete").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      await deleteBoard(board);
+    });
+    row.appendChild(tab);
+  });
+
+  await populateBoardSelects(boards);
+
+  if (boardTabsSortable) boardTabsSortable.destroy();
+  boardTabsSortable = new Sortable(row, {
+    animation: 150,
+    onEnd: handleBoardReorder,
+  });
+}
+
+function startRenameBoard(tab, board) {
+  const nameEl = tab.querySelector(".board-tab-name");
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "board-tab-rename-input";
+  input.value = board.name;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const commit = async () => {
+    const name = input.value.trim();
+    if (name && name !== board.name) {
+      const boards = await getBoards();
+      const target = boards.find((b) => b.id === board.id);
+      if (target) target.name = name;
+      await setBoards(boards);
+    }
+    await renderBoardTabs();
+  };
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") input.blur();
+    if (e.key === "Escape") {
+      input.value = board.name;
+      input.blur();
+    }
+  });
+  input.addEventListener("blur", commit, { once: true });
+}
+
+async function deleteBoard(board) {
+  const boards = await getBoards();
+  if (boards.length <= 1) {
+    alert("You need at least one board.");
+    return;
+  }
+  const cards = await getCards();
+  const affected = cards.filter((c) => c.boardId === board.id);
+  const fallback = boards.find((b) => b.id !== board.id && b.isDefault) || boards.find((b) => b.id !== board.id);
+
+  const confirmMsg = affected.length
+    ? `Delete "${board.name}"? Its ${affected.length} card${affected.length === 1 ? "" : "s"} will move to "${fallback.name}".`
+    : `Delete "${board.name}"?`;
+  if (!confirm(confirmMsg)) return;
+
+  const remainingBoards = boards.filter((b) => b.id !== board.id).map((b, i) => ({ ...b, order: i }));
+  const movedCards = cards.map((c) => (c.boardId === board.id ? { ...c, boardId: fallback.id } : c));
+
+  await setBoards(remainingBoards);
+  await setCards(movedCards);
+
+  if (activeBoardId === board.id) activeBoardId = fallback.id;
+  await renderBoardTabs();
+  await renderActiveBoard();
+}
+
+el("addBoardBtn").addEventListener("click", async () => {
+  const name = prompt("Name this board:");
+  if (!name || !name.trim()) return;
+  const boards = await getBoards();
+  boards.push({ id: makeId(), name: name.trim(), order: boards.length, createdAt: Date.now(), isDefault: false });
+  await setBoards(boards);
+  activeBoardId = boards[boards.length - 1].id;
+  await renderBoardTabs();
+  await renderActiveBoard();
+});
+
+async function handleBoardReorder() {
+  const ids = Array.from(el("boardTabs").children).map((node) => node.dataset.boardId);
+  const boards = await getBoards();
+  const reordered = ids
+    .map((id, i) => {
+      const b = boards.find((x) => x.id === id);
+      return b ? { ...b, order: i } : null;
+    })
+    .filter(Boolean);
+  await setBoards(reordered);
+}
+
+async function populateBoardSelects(boardsArg) {
+  const list = boardsArg || (await getBoards());
+  const { defaultQuickSaveBoardId } = await getLocal("defaultQuickSaveBoardId");
+  const quickSaveSelect = el("quickSaveBoard");
+  quickSaveSelect.innerHTML = list.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("");
+  const fallbackId = (list.find((b) => b.isDefault) || list[0] || {}).id;
+  quickSaveSelect.value =
+    defaultQuickSaveBoardId && list.some((b) => b.id === defaultQuickSaveBoardId) ? defaultQuickSaveBoardId : fallbackId;
+}
+
+el("quickSaveBoard").addEventListener("change", async (e) => {
+  await setLocal({ defaultQuickSaveBoardId: e.target.value });
+});
+
+async function renderActiveBoard() {
+  const cards = await getCards();
+  const boards = await getBoards();
+  const query = el("boardSearch").value.trim().toLowerCase();
+
+  const inBoard = cards.filter((c) => c.boardId === activeBoardId).sort((a, b) => a.order - b.order);
+
+  const filtered = inBoard.filter((card) => {
+    if (boardFilterType !== "all" && card.type !== boardFilterType) return false;
     if (!query) return true;
-    const haystack = `${item.title} ${item.url} ${item.selectionText || ""}`.toLowerCase();
+    const haystack = `${card.title} ${card.url} ${card.selectionText || ""}`.toLowerCase();
     return haystack.includes(query);
   });
 
-  const list = el("inboxList");
-  list.innerHTML = "";
+  const grid = el("boardCards");
+  grid.innerHTML = "";
 
-  if (!items.length) {
-    list.innerHTML = `<li class="inbox-empty">Your inbox is empty — right-click any page or selected text to save it here.</li>`;
-    return;
-  }
-  if (!filtered.length) {
-    list.innerHTML = `<li class="inbox-empty">No saved items match your search.</li>`;
-    return;
+  if (!inBoard.length) {
+    grid.innerHTML = `<div class="board-empty">Nothing here yet — right-click any page or selected text, use the Quick Save shortcut, or import your bookmarks.</div>`;
+  } else if (!filtered.length) {
+    grid.innerHTML = `<div class="board-empty">No cards match your search.</div>`;
+  } else {
+    filtered.forEach((card) => {
+      const snippet = card.type === "selection" ? card.selectionText : domainOf(card.url);
+      const typeIcon = card.type === "selection" ? "✂️" : card.type === "bookmark" ? "🔖" : "📄";
+      const otherBoards = boards.filter((b) => b.id !== card.boardId);
+
+      const cardEl = document.createElement("div");
+      cardEl.className = "board-card";
+      cardEl.dataset.cardId = card.id;
+      cardEl.innerHTML = `
+        <div class="board-card-body">
+          <img class="board-card-favicon" src="${card.favicon || "icons/icon16.png"}" />
+          <div class="board-card-text">
+            <div class="board-card-title">${escapeHtml(card.title)}</div>
+            <div class="board-card-snippet">${escapeHtml(snippet)}</div>
+            <div class="board-card-meta">${typeIcon} ${timeAgo(card.savedAt)}</div>
+          </div>
+        </div>
+        <div class="board-card-controls">
+          <select class="board-card-move" title="Move to board" aria-label="Move to board">
+            <option value="">Move to…</option>
+            ${otherBoards.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join("")}
+          </select>
+          <button class="board-card-delete" title="Remove" aria-label="Remove">✕</button>
+        </div>
+      `;
+      cardEl.querySelector(".board-card-favicon").addEventListener("error", (e) => {
+        e.target.src = "icons/icon16.png";
+      });
+      cardEl.querySelector(".board-card-body").addEventListener("click", () => {
+        if (card.url) window.open(normalizeUrl(card.url), "_blank");
+      });
+      cardEl.querySelector(".board-card-move").addEventListener("change", async (e) => {
+        if (!e.target.value) return;
+        await moveCard(card.id, e.target.value);
+      });
+      cardEl.querySelector(".board-card-delete").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await deleteCard(card.id);
+      });
+      grid.appendChild(cardEl);
+    });
   }
 
-  filtered.forEach((item) => {
-    const snippet = item.type === "selection" ? item.selectionText : domainOf(item.url);
-    const li = document.createElement("li");
-    li.className = "inbox-item";
-    li.innerHTML = `
-      <img class="inbox-favicon" src="${item.favicon || "icons/icon16.png"}" />
-      <div class="inbox-body">
-        <div class="inbox-title">${escapeHtml(item.title)}</div>
-        <div class="inbox-snippet">${escapeHtml(snippet)}</div>
-        <div class="inbox-meta">${item.type === "selection" ? "✂️ Selection" : "📄 Page"} · ${timeAgo(item.savedAt)}</div>
-      </div>
-      <button class="inbox-delete" title="Remove" aria-label="Remove">✕</button>
-    `;
-    li.querySelector(".inbox-favicon").addEventListener("error", (e) => {
-      e.target.src = "icons/icon16.png";
-    });
-    li.querySelector(".inbox-body").addEventListener("click", () => {
-      if (item.url) window.open(normalizeUrl(item.url), "_blank");
-    });
-    li.querySelector(".inbox-delete").addEventListener("click", async (e) => {
-      e.stopPropagation();
-      const current = await getInboxItems();
-      await setLocal({ inboxItems: current.filter((i) => i.id !== item.id) });
-      await renderInbox();
-    });
-    list.appendChild(li);
+  if (boardCardsSortable) boardCardsSortable.destroy();
+  boardCardsSortable = new Sortable(grid, {
+    animation: 150,
+    ghostClass: "card-ghost",
+    filter: ".board-empty",
+    onEnd: handleCardDrop,
   });
 }
 
-async function updateInboxBadge() {
-  const items = await getInboxItems();
-  const badge = el("inboxBadge");
-  if (items.length > 0) {
-    badge.textContent = items.length > 99 ? "99+" : String(items.length);
+async function deleteCard(id) {
+  const cards = await getCards();
+  await setCards(cards.filter((c) => c.id !== id));
+  await renderActiveBoard();
+}
+
+async function moveCard(id, targetBoardId) {
+  const cards = await getCards();
+  const targetCards = cards.filter((c) => c.boardId === targetBoardId);
+  const minOrder = targetCards.length ? Math.min(...targetCards.map((c) => c.order)) : 0;
+  const updated = cards.map((c) =>
+    c.id === id ? { ...c, boardId: targetBoardId, order: targetCards.length ? minOrder - 1 : 0 } : c
+  );
+  await setCards(updated);
+  await renderActiveBoard();
+}
+
+// Only the active board's grid is ever rendered at a time (boards are tabs,
+// not simultaneous columns), so dragging only ever reorders within it —
+// moving a card to a different board goes through the "Move to…" select
+// above instead, which also covers touch/keyboard-only users.
+async function handleCardDrop() {
+  const ids = Array.from(el("boardCards").children).map((node) => node.dataset.cardId).filter(Boolean);
+  const cards = await getCards();
+  const reordered = cards.map((c) => {
+    const idx = ids.indexOf(c.id);
+    return idx === -1 || c.boardId !== activeBoardId ? c : { ...c, order: idx };
+  });
+  await setCards(reordered);
+}
+
+async function updateCardCountBadge() {
+  const cards = await getCards();
+  const badge = el("cardCountBadge");
+  if (cards.length > 0) {
+    badge.textContent = cards.length > 99 ? "99+" : String(cards.length);
     badge.hidden = false;
   } else {
     badge.hidden = true;
   }
 }
 
-// Keep the panel and badge in sync if items are saved (context menu/popup) or
-// removed while this new-tab page happens to be open.
+// Keep everything in sync if cards/boards change from elsewhere (context
+// menu, Quick Save shortcut, or bookmarks import) while this page is open.
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.inboxItems) {
-    updateInboxBadge();
-    if (!el("inboxPanel").hidden) renderInbox();
+  if (area === "local" && (changes.nookCards || changes.nookBoards)) {
+    updateCardCountBadge();
+    renderBoardTabs();
+    renderActiveBoard();
   }
 });
 
-el("inboxSearch").addEventListener("input", renderInbox);
+el("boardSearch").addEventListener("input", renderActiveBoard);
 
-document.querySelectorAll("#inboxFilter button").forEach((btn) => {
+document.querySelectorAll("#boardFilter button").forEach((btn) => {
   btn.addEventListener("click", () => {
-    inboxFilterType = btn.dataset.filter;
-    document.querySelectorAll("#inboxFilter button").forEach((b) =>
-      b.classList.toggle("active", b === btn)
-    );
-    renderInbox();
+    boardFilterType = btn.dataset.filter;
+    document.querySelectorAll("#boardFilter button").forEach((b) => b.classList.toggle("active", b === btn));
+    renderActiveBoard();
   });
 });
 
-function openInbox() {
-  el("inboxPanel").hidden = false;
+// ---------- Bookmarks import ----------
+function openImportPanel() {
+  el("importPanel").hidden = false;
   el("overlay").hidden = false;
-  renderInbox();
+  el("importStatus").hidden = true;
+  renderBookmarkTree();
+  populateImportTargetBoard();
 }
-function closeInbox() {
-  el("inboxPanel").hidden = true;
+function closeImportPanel() {
+  el("importPanel").hidden = true;
   el("overlay").hidden = true;
 }
-el("inboxBtn").addEventListener("click", openInbox);
-el("closeInbox").addEventListener("click", closeInbox);
+el("importBtn").addEventListener("click", openImportPanel);
+el("closeImport").addEventListener("click", closeImportPanel);
+
+async function populateImportTargetBoard() {
+  const boards = await getBoards();
+  const options = boards.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`);
+  options.push(`<option value="__new__">+ New board…</option>`);
+  el("importTargetBoard").innerHTML = options.join("");
+}
+
+async function renderBookmarkTree() {
+  const container = el("bookmarkTree");
+  container.innerHTML = `<p class="settings-hint">Loading…</p>`;
+  const [rootNode] = await chrome.bookmarks.getTree();
+  container.innerHTML = "";
+  (rootNode.children || []).forEach((child) => container.appendChild(renderBookmarkNode(child)));
+}
+
+function renderBookmarkNode(node) {
+  const wrap = document.createElement("div");
+  wrap.className = "bookmark-node";
+
+  const row = document.createElement("label");
+  row.className = "bookmark-row";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  if (node.url) checkbox.dataset.url = node.url;
+  row.appendChild(checkbox);
+  const label = document.createElement("span");
+  label.textContent = node.title || node.url || "(untitled)";
+  row.appendChild(label);
+  wrap.appendChild(row);
+
+  // Checking a folder checks every bookmark nested under it.
+  checkbox.addEventListener("change", () => {
+    wrap.querySelectorAll('input[type="checkbox"]').forEach((cb) => (cb.checked = checkbox.checked));
+  });
+
+  if (node.children && node.children.length) {
+    const childWrap = document.createElement("div");
+    childWrap.className = "bookmark-children";
+    node.children.forEach((child) => childWrap.appendChild(renderBookmarkNode(child)));
+    wrap.appendChild(childWrap);
+  }
+
+  return wrap;
+}
+
+function showImportStatus(message, isError) {
+  const status = el("importStatus");
+  status.textContent = message;
+  status.classList.toggle("error", !!isError);
+  status.hidden = false;
+}
+
+el("runImportBtn").addEventListener("click", async () => {
+  const checked = Array.from(el("bookmarkTree").querySelectorAll('input[type="checkbox"]:checked')).filter(
+    (cb) => cb.dataset.url // only leaf bookmarks carry a URL — folders are just checkbox propagation
+  );
+  if (!checked.length) {
+    showImportStatus("Select at least one bookmark first.", true);
+    return;
+  }
+
+  const boards = await getBoards();
+  let targetId = el("importTargetBoard").value;
+  if (targetId === "__new__") {
+    const name = prompt("Name the new board:");
+    if (!name || !name.trim()) return;
+    const board = { id: makeId(), name: name.trim(), order: boards.length, createdAt: Date.now(), isDefault: false };
+    await setBoards([...boards, board]);
+    targetId = board.id;
+  }
+
+  const cards = await getCards();
+  const existingInTarget = cards.filter((c) => c.boardId === targetId);
+  let nextOrder = existingInTarget.length ? Math.max(...existingInTarget.map((c) => c.order)) + 1 : 0;
+
+  const imported = checked.map((cb) => ({
+    id: makeId(),
+    boardId: targetId,
+    order: nextOrder++,
+    type: "bookmark",
+    title: cb.parentElement.querySelector("span").textContent,
+    url: cb.dataset.url,
+    selectionText: null,
+    favicon: faviconFor(cb.dataset.url),
+    tags: [],
+    savedAt: Date.now(),
+    source: "bookmark-import",
+  }));
+
+  await setCards([...cards, ...imported]);
+  await renderBoardTabs();
+  if (activeBoardId === targetId) await renderActiveBoard();
+  showImportStatus(`Imported ${imported.length} bookmark${imported.length === 1 ? "" : "s"}.`);
+});
 
 // ---------- Battery/CPU: pause aurora animation when the tab isn't visible ----------
 document.addEventListener("visibilitychange", () => {
@@ -587,9 +943,11 @@ document.addEventListener("visibilitychange", () => {
   await renderLinks();
   await renderLinkList();
   await initSearchEngine();
-  await updateInboxBadge();
-  if (location.hash === "#inbox") {
-    openInbox();
+  await renderBoardTabs();
+  await renderActiveBoard();
+  await updateCardCountBadge();
+  if (location.hash === "#boards" || location.hash === "#inbox") {
+    el("boardsSection").scrollIntoView({ behavior: "smooth", block: "start" });
     history.replaceState(null, "", location.pathname + location.search);
   }
 })();

@@ -6,9 +6,9 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
-async function getInbox() {
-  const { inboxItems } = await chrome.storage.local.get("inboxItems");
-  return inboxItems || [];
+async function getRecentCards() {
+  const { nookCards } = await chrome.storage.local.get("nookCards");
+  return (nookCards || []).slice().sort((a, b) => b.savedAt - a.savedAt);
 }
 
 let statusTimer = null;
@@ -24,7 +24,7 @@ function showStatus(message, isError = false) {
 }
 
 async function renderRecent() {
-  const items = (await getInbox()).slice(0, 4);
+  const items = (await getRecentCards()).slice(0, 4);
   const list = el("recentList");
   list.innerHTML = "";
 
@@ -114,8 +114,8 @@ el("saveSelectionBtn").addEventListener("click", async () => {
   }
 });
 
-el("openInboxBtn").addEventListener("click", () => {
-  chrome.tabs.create({ url: chrome.runtime.getURL("newtab.html#inbox") });
+el("openBoardsBtn").addEventListener("click", () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL("newtab.html#boards") });
 });
 
 renderRecent();

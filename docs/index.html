@@ -238,7 +238,7 @@
   </header>
 
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated · September 4, 2026</p>
+  <p class="updated">Last updated · September 5, 2026</p>
 
   <div class="tldr">
     <div class="tile">
@@ -257,7 +257,7 @@
 
   <section>
     <h2>What Nook is</h2>
-    <p>Nook replaces your new tab page with a clock, web search, quick links, an animated or photo background, and a personal Inbox for saving pages or text you select while browsing. This policy explains exactly what it stores, why, and where it goes — which, for almost everything, is nowhere but your own device.</p>
+    <p>Nook replaces your new tab page with a clock, web search, quick links, an animated or photo background, and visual boards for saving and organizing pages or text you select while browsing. This policy explains exactly what it stores, why, and where it goes — which, for almost everything, is nowhere but your own device.</p>
   </section>
 
   <section>
@@ -273,15 +273,23 @@
         <div class="desc">Display preferences — which search engine, clock format, light/dark theme, color palette, and background you've chosen.</div>
       </div>
       <div class="row">
-        <div class="key"><code class="chip">inboxItems</code><br><span class="scope">local</span></div>
-        <div class="desc">Entries you explicitly save to your Inbox: a page's <b>title, URL, and favicon</b>, or the exact <b>text you selected</b>, plus the time you saved it. Nothing is added here unless you click "Save page," "Save selection," or the matching right‑click menu item.</div>
+        <div class="key"><code class="chip">nookBoards</code><br><span class="scope">local</span></div>
+        <div class="desc">The name and order of each board you create (e.g. "Inbox," "Reading list") — just labels, nothing about their contents.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">nookCards</code><br><span class="scope">local</span></div>
+        <div class="desc">The cards on your boards: a page's <b>title, URL, and favicon</b>, or the exact <b>text you selected</b>, or a bookmark you imported — plus which board it's on and when you saved it. Nothing is added here unless you save a page/selection, use the Quick Save shortcut, or import a bookmark.</div>
+      </div>
+      <div class="row">
+        <div class="key"><code class="chip">defaultQuickSaveBoardId</code><br><span class="scope">local</span></div>
+        <div class="desc">Which board the Quick Save keyboard shortcut adds cards to — set from a dropdown in Settings.</div>
       </div>
       <div class="row">
         <div class="key"><code class="chip">customPhotoData</code><br><span class="scope">local</span></div>
         <div class="desc">An optional background photo you upload from your own device, resized and compressed before it's stored.</div>
       </div>
     </div>
-    <p class="dim" style="font-size:13.5px; margin-top:14px;"><b style="color:var(--ink)">sync</b> is synced across your signed‑in Chrome browsers by Google's own Chrome Sync, under your Google account. <b style="color:var(--ink)">local</b> stays on this device only. Nook has no server in either path.</p>
+    <p class="dim" style="font-size:13.5px; margin-top:14px;"><b style="color:var(--ink)">sync</b> is synced across your signed‑in Chrome browsers by Google's own Chrome Sync, under your Google account. <b style="color:var(--ink)">local</b> stays on this device only. Nook has no server in either path. Boards and cards stay in <b style="color:var(--ink)">local</b> storage rather than sync — a board full of saved pages can easily outgrow Chrome sync's small per‑item size limit, so they intentionally don't sync across your devices yet.</p>
   </section>
 
   <section>
@@ -290,7 +298,9 @@
     <ul class="plain">
       <li>Clicking <b>Save current page</b> or <b>Save selected text</b> in the popup</li>
       <li>Using the right‑click menu items <b>"Save page to Nook"</b> or <b>"Save selection to Nook"</b></li>
-      <li>Adding a quick link, changing a setting, or uploading a background photo</li>
+      <li>Pressing the <b>Quick Save</b> keyboard shortcut</li>
+      <li>Choosing bookmarks to <b>import</b> from your existing Chrome bookmarks</li>
+      <li>Creating, renaming, or deleting a board, adding a quick link, changing a setting, or uploading a background photo</li>
     </ul>
     <p>Nook does not watch your browsing in the background, log the pages you visit, track clicks or scrolling, or record keystrokes. It only reads the active tab's title, URL, favicon, or current text selection at the exact moment you trigger one of the actions above.</p>
   </section>
@@ -314,7 +324,7 @@
 
   <section>
     <h2>Your controls</h2>
-    <p>Every Inbox item has a remove button. Quick links and the custom background photo can be deleted from Settings at any time. Uninstalling Nook removes all of its locally stored data immediately; synced data clears from your Google account's extension storage as Chrome would for any removed extension.</p>
+    <p>Every card has a remove button, and can be moved between boards or dragged to reorder. Boards can be created, renamed, or deleted at any time (deleting a board moves its cards to your default board first — nothing is silently discarded). Quick links and the custom background photo can be deleted from Settings at any time. Uninstalling Nook removes all of its locally stored data immediately; synced data clears from your Google account's extension storage as Chrome would for any removed extension.</p>
   </section>
 
   <section>
@@ -345,7 +355,12 @@
         <div class="key"><code class="chip">scripting</code></div>
         <div class="desc">Reads your current text selection only when you click "Save selected text" in the popup.</div>
       </div>
+      <div class="row">
+        <div class="key"><code class="chip">bookmarks</code></div>
+        <div class="desc">Read‑only — lets the Import panel show your existing Chrome bookmarks so you can copy some onto a board. Nook never creates, edits, or removes anything in your actual bookmarks.</div>
+      </div>
     </div>
+    <p class="dim" style="font-size:13.5px; margin-top:14px;">The Quick Save keyboard shortcut is registered via Chrome's <code class="chip">commands</code> API, which doesn't require a separate permission — you can view or change its key combination anytime at <code class="chip">chrome://extensions/shortcuts</code>.</p>
   </section>
 
   <section>
